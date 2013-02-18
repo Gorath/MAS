@@ -1,0 +1,72 @@
+
+file:   README for proxdd (and related files)
+author: Robert Craven, robert.craven@imperial.ac.uk
+date:   17/01/2013
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% PREPARE
+
+1) Edit the option at line 26 of proxdd.pl so it points to your data dir.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% LOADING
+
+Two options:
+
+1) Load sicstus as normal and then just consult or compile proxdd.pl
+        % sicstus -l proxdd.pl
+   or
+        % sicstus
+        ...
+        ?- [proxdd].
+   or
+        % sicstus
+        ...
+        ?- compile(proxdd).
+   If you do this from the proxdd/code/ directory, then it will set
+   things up to look in the proxdd/data/ directory for source files.
+
+2) Use the script 'proxdd' provided.  This needs to go somewhere in your path,
+   and the variables at lines 9 and 13 need to be edited to point to the
+   SICStus executable and the directory where proxdd.pl is.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% USING
+
+1) To get some help on the screen, do:
+        ?- help.
+
+2) To load source files (say, 'source.pl'), do:
+        ?- loadf(source).
+
+3) To make a query for some sentence 's', do:
+        ?- sxdd(s, A).
+   ('A' will be bound to the answer).
+
+4) To print the steps of the derivation verbosely, do:
+        ?- set_verbose
+
+5) To switch to grounded semantics, do:
+        ?- set_gb.
+
+6) To switch to admissible semantics, do:
+        ?- set_ab.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% VISUALIZE USING GRAPHVIZ
+
+Suppose your source file is 'source.pl'.
+
+1) To output solutions to a file which can be drawn by graphviz, do:
+        ?- set_print.
+        ?- sxdd(s, A).  [where 's' is your query]
+
+2) Then, there should be output a file something like 'source_sol_1.dot'.
+   Do (in the shell):
+        % dot -Tps -o source_sol_1.ps source_sol_1.dot
+        % evince source_sol_1.ps &
+

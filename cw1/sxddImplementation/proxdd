@@ -1,0 +1,72 @@
+#!/bin/sh
+
+CLAIM=""
+DERIVEGOAL=""
+DIR=`pwd`
+FILE=""
+GETCLAIM=0
+GETSTRATEGY=0
+GRAPHARG="/<EDITME!>/proxdd.pl"
+QUIET=0
+PREDICATE=""
+SCRIPTSTYLE=0
+SICSTUS="/usr/local/bin/sicstus"
+STRATEGY=""
+
+## get command line arguments
+
+ARGNUM=0
+for ARG in "$@"
+do
+ ARGNUM=`expr $ARGNUM + 1`
+ if [ $ARG = "-r" ]; then
+  SCRIPTSTYLE=1
+ else
+  if [ $ARG = "-q" ]; then
+   QUIET=1
+  else
+   if [ $ARG = "-c" ]; then
+    GETCLAIM=1
+   else
+    if [ $ARG = "-s" ]; then
+     GETSTRATEGY=1
+    else
+     if [ $GETCLAIM -eq 1 ]; then
+      CLAIM=$ARG
+      GETCLAIM=0
+     else
+      if [ $GETSTRATEGY -eq 1 ]; then
+       STRATEGY=$ARG
+       GETSTRATEGY=0
+      else
+       FILE=`echo "$ARG" | sed 's/\.pl$//'`
+      fi
+     fi
+    fi
+   fi
+  fi
+ fi
+done
+
+if [ $SCRIPTSTYLE -eq 0 ]; then
+ if [ -z $FILE ]; then
+  GOAL="set_opt(frameworkdir,'${DIR}/')."
+ else
+  GOAL="set_opt(frameworkdir,'${DIR}/'),loadf(${FILE})."
+ fi
+ rlwrap ${SICSTUS} -l ${GRAPHARG} --goal "${GOAL}"
+else
+ if [ $QUIET -eq 0 ]; then
+  PREDICATE="script_derive_print"
+ else
+  PREDICATE="script_derive"
+ fi
+ if [ -z $STRATEGY ]; then
+  DERIVEGOAL="${PREDICATE}(${CLAIM})"
+ else
+  DERIVEGOAL="${PREDICATE}(${CLAIM},${STRATEGY})"
+ fi
+ GOAL="set_opt(frameworkdir,'${DIR}/'),loadf(${FILE}),${DERIVEGOAL},halt."
+ ${SICSTUS} -l ${GRAPHARG} --noinfo --nologo --goal "${GOAL}"
+fi
+
