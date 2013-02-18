@@ -23,7 +23,7 @@
 
 % EDIT THE FOLLOWING:
 
-option(frameworkdir, '/Users/cliffsun91/Desktop/4th\ Year\ CW/Multi\ Agent\ Systems\ -\ CW/').
+option(frameworkdir, '../').
 
 % END OF EDITABLE
 
