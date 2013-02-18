@@ -1,0 +1,54 @@
+digraph G {
+ 
+ ratio="fill";
+ compound="true";
+ ranksep="1";
+ rankdir="LR";
+ bgcolor="#FFFFFF";
+ node [style="filled",shape="box",height="0.4",width="0.6",margin="0.1,0.1"];
+
+ subgraph cluster0 {
+  label = "P:1";
+  edge [color="#000000"];
+  labeljust="l";
+  pencolor="#444444";
+  style="filled";
+  color="#A2DDF3";
+  s0_0 [label="free6pm_b",fillcolor="#117711",color="#117711",fontcolor="white"];
+  s0_1 [label="free6pm_b",fillcolor="#117711",color="#117711",fontcolor="white"];
+  s0_1 -> s0_0;
+ }
+
+ edge [color="#BB2222"];
+
+ subgraph cluster1 {
+  label = "O:3";
+  edge [color="#000000"];
+  labeljust="l";
+  pencolor="#444444";
+  style="filled";
+  color="#CCCCCC";
+  s1_0 [label="not_free6pm_b",fillcolor="#777777",color="#000000",fontcolor="#FFFFFF"];
+  s1_1 [label="sports_b",fillcolor="#CC9922",color="#000000",fontcolor="#FFFFFF"];
+  s1_1 -> s1_0;
+ }
+
+ edge [color="#BB2222"];
+ s1_0 -> s0_1;
+
+ subgraph cluster2 {
+  label = "P:4";
+  edge [color="#000000"];
+  labeljust="l";
+  pencolor="#444444";
+  style="filled";
+  color="#A2DDF3";
+  s2_0 [label="not_sports_b",fillcolor="#222222",color="#222222",fontcolor="white"];
+  s2_1 [label="overweight_b",fillcolor="#117711",color="#117711",fontcolor="white"];
+  s2_1 -> s2_0;
+ }
+
+ edge [color="#BB2222"];
+ s2_0 -> s1_1;
+
+}

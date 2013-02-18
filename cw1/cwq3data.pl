@@ -17,6 +17,10 @@ contrary(sports_b, not_sports_b).
 contrary(overweight_b, not_overweight_b).
 contrary(not_get6pm_a, get6pm_a).
 contrary(not_get8am_a, get8am_a).
+contrary(free6pm_b, not_free6pm_b).
+contrary(free8am_b, not_free8am_b).
+contrary(not_get6pm_b, get6pm_b).
+contrary(not_get8am_b, get8am_b).
 
 myRule(get6pm_a, [free6pm_a, not_get8am_a, not_get6pm_b]).
 myRule(get8am_a, [free8am_a, not_get6pm_a, not_get8am_b]).
