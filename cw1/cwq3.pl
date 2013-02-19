@@ -17,10 +17,15 @@ attacks((C1,X1), (C2,X2)) :- argument((C1,X1)), argument((C2,X2)),
 							 contrary(Ass,C1),
 							 member(Ass,X2).
 
-grounded(A) :- \+attacks(_,A), argument(A).
-grounded(A) :- argument(A),
-			   forall(attacks(B,A), (attacks(C,B), 
-				 	 	 			 B\==C, 
-				 	 	 			 A\==C, 
-				 	 	 			 grounded(C))).
- 
+grounded(A) :- argument(A), groundedLoopDetector(A, []).
+
+groundedLoopDetector(A, As) :- argument(A), \+attacks(_,A), !.
+groundedLoopDetector(A, As) :- argument(A),
+                          	   forall(attacks(B, A),
+                              			(A \== B,
+                              			 attacks(C, B),
+                              			 \+member(A, As),
+                              			 B \== C,
+                              			 A \== C,
+                              			 groundedLoopDetector(C, [A | As]))
+                         		).
