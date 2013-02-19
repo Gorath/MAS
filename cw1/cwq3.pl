@@ -1,5 +1,5 @@
 :- [cwq3data].
-
+:- use_module(library(aggregate)).
 
 argument((Ass, [Ass])) :- myAsm(Ass). 
 argument((C, X)) :- myRule(C, ReqForC),
