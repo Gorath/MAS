@@ -46,6 +46,8 @@ public class HospitalAgent extends Agent {
             fe.printStackTrace();
         }
 
+        addBehaviour(new AllocateAppointment());
+        
         // Make this agent terminate
         doDelete();
     }
