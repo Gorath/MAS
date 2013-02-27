@@ -2,3 +2,4 @@ JadeCW.iml
 .classpath
 .project
 .metadata/
+*.class
