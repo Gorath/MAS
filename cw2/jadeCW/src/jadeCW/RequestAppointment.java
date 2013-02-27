@@ -1,6 +1,9 @@
 package jadeCW;
 
+import jade.core.AID;
 import jade.core.behaviours.Behaviour;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 /**
  * Created with IntelliJ IDEA.
@@ -11,13 +14,32 @@ import jade.core.behaviours.Behaviour;
  */
 public class RequestAppointment extends Behaviour {
 
+    static String conversationID = "book-appointment";
+
     @Override
     public void action() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        AID myAllocator = ((PatientAgent)myAgent).getAppointmentAllocator();
+        if (myAllocator != null) return;
+        if (((PatientAgent)myAgent).hasAppointment()) return;
+
+        ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+        request.addReceiver(myAllocator);
+        request.setConversationId(conversationID);
+
+        myAgent.send(request);
+
+        MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
+                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
+
+        ACLMessage response = myAgent.receive(mt);
+        int allocatedAppointment = Integer.parseInt(response.getUserDefinedParameter("allocatedAppointment"));
+        ((PatientAgent)myAgent).setAppointment(allocatedAppointment);
+
     }
 
     @Override
     public boolean done() {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
 }

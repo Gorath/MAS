@@ -24,12 +24,15 @@ import java.util.List;
 public class PatientAgent extends Agent {
 
 
-    AID appointmentAllocatorProvider;
+    private AID appointmentAllocatorProvider;
+    private int myAppointment = -1;
 
     protected void setup() {
         String inputString = System.console().readLine().trim();
         parsePatientAppointmentPreferences(inputString);
         subscribeToDF();
+
+        addBehaviour(new RequestAppointment());
     }
 
 
@@ -102,6 +105,18 @@ public class PatientAgent extends Agent {
         }
 
         return appointmentPreferences;
+    }
+
+    public boolean hasAppointment() {
+        return myAppointment != -1;
+    }
+
+    public void setAppointment(int i) {
+        myAppointment = i;
+    }
+
+    public AID getAppointmentAllocator() {
+        return appointmentAllocatorProvider;
     }
 
 }

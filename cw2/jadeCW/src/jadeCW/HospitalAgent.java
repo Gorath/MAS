@@ -50,5 +50,9 @@ public class HospitalAgent extends Agent {
         doDelete();
     }
 
+    public int requestedAppointment(Agent a, int appointmentNumber) {
+        return -1;
+    }
+
 
 }
