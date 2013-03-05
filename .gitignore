@@ -3,4 +3,8 @@ JadeCW.iml
 .project
 .metadata/
 *.class
+<<<<<<< HEAD
 cw2/jadeCW/testingStuff/
+=======
+*.txt
+>>>>>>> updated gitignore
