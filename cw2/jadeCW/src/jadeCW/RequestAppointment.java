@@ -45,7 +45,7 @@ public class RequestAppointment extends Behaviour {
 	    case 1:
 	        ACLMessage response = myAgent.receive(mt);
 	        if (response != null) {
-	        	System.out.println("Patient: response received and not null");
+	        	System.out.println("Patient " + myAgent.getLocalName() + " - RequestAppointment: response received and not null");
 	            if (response.getPerformative() == ACLMessage.CONFIRM){
 	                int allocatedAppointment = Integer.parseInt(response.getUserDefinedParameter("allocatedAppointment"));
 	                ((PatientAgent)myAgent).setAppointment(allocatedAppointment);
@@ -56,7 +56,7 @@ public class RequestAppointment extends Behaviour {
 	            }
 	        }
 	        else {
-	        	System.out.println("Patient " + myAgent.getLocalName() + " - Request Appointment blocked.");
+	        	System.out.println("Patient " + myAgent.getLocalName() + " - RequestAppointment: blocked.");
 		        block();
 	        }
 	        System.out.println("Patient " + myAgent.getLocalName() + " appointment is: " + ((PatientAgent)myAgent).hasAppointment());

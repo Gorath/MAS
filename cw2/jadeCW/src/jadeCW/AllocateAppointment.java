@@ -17,12 +17,13 @@ public class AllocateAppointment extends CyclicBehaviour{
 	
 	@Override
 	public void action() {
-        MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+        MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+				 								 MessageTemplate.MatchConversationId(conversationID));
 
         ACLMessage received = myAgent.receive(mt);
         
         if (received != null) {
-        	System.out.println("Hospital: message received and is not null");
+        	System.out.println("Hospital - AllocateAppointment: message received and is not null");
         	AID patient = received.getSender();
         	
             ACLMessage replyMessage = received.createReply();
@@ -43,7 +44,7 @@ public class AllocateAppointment extends CyclicBehaviour{
             myAgent.send(replyMessage);
         }
         else {
-        	System.out.println("Hospital - Allocate Appoinment blocked.");
+        	System.out.println("Hospital - AllocateAppoinment blocked.");
         	block();
         }
 	}

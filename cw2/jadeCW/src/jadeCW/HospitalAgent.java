@@ -56,11 +56,12 @@ public class HospitalAgent extends Agent {
         }
 
         addBehaviour(new AllocateAppointment(appointments));
+        addBehaviour(new RespondToQuery());
         
     }
 
-    public int requestedAppointment(Agent a, int appointmentNumber) {
-        return -1;
+    public AID getAppointmentOwner(int appointmentNumber) {
+        return appointments[appointmentNumber-1];
     }
     
     public void takeDown(){
@@ -71,7 +72,7 @@ public class HospitalAgent extends Agent {
     		if (patientAgent == null) {
     			patient = "null";
     		} else{
-    			patient = patientAgent.getName();
+    			patient = patientAgent.getLocalName();
     		}
     		System.out.println("hopsital1: " + "Appointment " + appointmentID + ": " + patient);
     	}

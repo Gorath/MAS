@@ -30,11 +30,12 @@ public class PatientAgent extends Agent {
     private int myAppointment = -1;
     private String inputString;
     List<ArrayList<Integer>> appointmentPreferences;
-    List<Integer> preferredAlreadyTried;
-    Map<Integer, AID> appointmentOwnedByPatient;
+    Map<Integer, AID> currentAppointmentsOwnedByPatient;
+    List<Integer> availableAppointments;
 
     public PatientAgent(){
-        appointmentOwnedByPatient = new HashMap<Integer, AID>();
+        currentAppointmentsOwnedByPatient = new HashMap<Integer, AID>();
+        availableAppointments = new ArrayList<Integer>();
     }
 
     protected void setup() {
@@ -54,10 +55,13 @@ public class PatientAgent extends Agent {
         subscribeToDF();
 
         addBehaviour(new RequestAppointment());
+        addBehaviour(new FindAppointmentOwner());
     }
 
     public int getMorePreferredAppointment() {
 
+    	List<Integer> preferredAlreadyTried = new ArrayList<Integer>();
+    	
         for (int i = 0; i < appointmentPreferences.size(); i++) {
 
             List<Integer> currentPreferenceLevel = appointmentPreferences.get(i);
@@ -158,11 +162,15 @@ public class PatientAgent extends Agent {
 
     public void takeDown(){
     	String appointmentString = myAppointment == -1 ? String.valueOf(myAppointment) : "null";
-    	System.out.println(this.getName() + ": Appointment " + appointmentString);
+    	System.out.println(this.getLocalName() + ": Appointment " + appointmentString);
     }
 
-    public void setAppointmentWithPatient(int appointment, AID patient){
-        appointmentOwnedByPatient.put(appointment, patient);
+    public void setAppointmentWithCurrentPatientOwner(int appointment, AID patient){
+        currentAppointmentsOwnedByPatient.put(appointment, patient);
+    }
+    
+    public void addAvailableAppointment(int appointment){
+    	availableAppointments.add(appointment);
     }
 
 }

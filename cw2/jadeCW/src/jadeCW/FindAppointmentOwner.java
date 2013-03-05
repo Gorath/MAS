@@ -18,6 +18,7 @@ public class FindAppointmentOwner extends Behaviour {
     private static String conversationID = "find-appointment-owner";
     private int step = 0;
     private MessageTemplate mt;
+    private int preferredAppointment = -1;
 
     //private List<Integer> alreadyTried = new ArrayList<Integer>;
 
@@ -27,7 +28,7 @@ public class FindAppointmentOwner extends Behaviour {
             case 0:
                 AID allocator = ((PatientAgent)myAgent).getAppointmentAllocator();
                 if (!((PatientAgent)myAgent).hasAppointment()) return;
-                int preferredAppointment = ((PatientAgent)myAgent).getMorePreferredAppointment();
+                preferredAppointment = ((PatientAgent)myAgent).getMorePreferredAppointment();
 
                 // If we have no preferred appointments left to try then stop trying
                 if (preferredAppointment == -1 ) {
@@ -54,11 +55,18 @@ public class FindAppointmentOwner extends Behaviour {
             case 1:
                 ACLMessage response = myAgent.receive(mt);
                 if (response != null) {
-                    System.out.println("FindAppointOwner Behaviour received response which is not null");
+                    System.out.println("Patient " + myAgent.getLocalName() + " - FindAppointmentOwner: Behaviour received response which is not null");
                     if (response.getPerformative() == ACLMessage.INFORM){
                         try {
                             AID patientAID = (AID) response.getContentObject();
-                            //then do something with the aid of the patient, i.e. negotiate with that patient
+                            if(patientAID != null){
+                            	((PatientAgent)myAgent).setAppointmentWithCurrentPatientOwner(preferredAppointment, patientAID);
+                            	System.out.println("> Preferred appointment " + preferredAppointment + " is owned by " + patientAID.getLocalName());
+                            }
+                            else{
+                            	((PatientAgent)myAgent).addAvailableAppointment(preferredAppointment);
+                            	System.out.println("appointment " + preferredAppointment + " is free");
+                            }
                         } catch (UnreadableException e) {
                             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                         }
@@ -69,7 +77,7 @@ public class FindAppointmentOwner extends Behaviour {
                     }
                 }
                 else {
-                    System.out.println("FindAppointOwner " + myAgent.getLocalName() + " - blocked.");
+                    System.out.println("Patient " + myAgent.getLocalName() + " - FindAppointmentOwner: blocked.");
                     block();
                 }
                 break;
@@ -78,6 +86,6 @@ public class FindAppointmentOwner extends Behaviour {
 
     @Override
     public boolean done() {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return step == 2;
     }
 }
