@@ -19,12 +19,13 @@ public class RequestAppointment extends Behaviour {
     @Override
     public void action() {
         AID myAllocator = ((PatientAgent)myAgent).getAppointmentAllocator();
-        if (myAllocator != null) return;
+        if (myAllocator == null) return;
         if (((PatientAgent)myAgent).hasAppointment()) return;
 
         ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
         request.addReceiver(myAllocator);
         request.setConversationId(conversationID);
+        request.setSender(myAgent.getAID());
 
         myAgent.send(request);
 
@@ -32,10 +33,11 @@ public class RequestAppointment extends Behaviour {
                 MessageTemplate.MatchInReplyTo(request.getReplyWith()));
 
         ACLMessage response = myAgent.receive(mt);
-        
-        if (response.getPerformative() == ACLMessage.CONFIRM){
-            int allocatedAppointment = Integer.parseInt(response.getUserDefinedParameter("allocatedAppointment"));
-            ((PatientAgent)myAgent).setAppointment(allocatedAppointment);
+        if (response != null) {
+            if (response.getPerformative() == ACLMessage.CONFIRM){
+                int allocatedAppointment = Integer.parseInt(response.getUserDefinedParameter("allocatedAppointment"));
+                ((PatientAgent)myAgent).setAppointment(allocatedAppointment);
+            }
         }
     }
 

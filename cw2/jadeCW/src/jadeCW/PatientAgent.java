@@ -29,11 +29,14 @@ public class PatientAgent extends Agent {
     private int myAppointment = -1;
     private String inputString;
 
-    public PatientAgent(String inputString) {
-		this.inputString = inputString;  
-	}
-    
+
     protected void setup() {
+
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+            inputString = (String) args[0];
+        }
+
         parsePatientAppointmentPreferences(inputString);
         subscribeToDF();
 

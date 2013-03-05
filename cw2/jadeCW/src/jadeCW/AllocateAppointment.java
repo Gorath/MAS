@@ -19,8 +19,11 @@ public class AllocateAppointment extends CyclicBehaviour{
 	public void action() {
         MessageTemplate mt = MessageTemplate.MatchConversationId(conversationID);
 
-        ACLMessage response = myAgent.receive(mt);
-        AID patient = response.getSender();
+        ACLMessage received = myAgent.receive(mt);
+
+        if (received == null) return;
+
+        AID patient = received.getSender();
         
         ACLMessage replyMessage;
         

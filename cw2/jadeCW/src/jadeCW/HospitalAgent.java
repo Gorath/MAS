@@ -22,13 +22,14 @@ public class HospitalAgent extends Agent {
 	private int numOfAppointments;
 	private AID[] appointments;
 	
-	public HospitalAgent(int numOfAppointments) {
-		super();
-		this.numOfAppointments = numOfAppointments;
-		appointments = new AID[numOfAppointments];
-	}
-	
     protected void setup() {
+
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+            this.numOfAppointments = Integer.parseInt((String) args[0]);
+        }
+
+        appointments = new AID[numOfAppointments];
 
         // Reguster service allocate-appointments
         String serviceName = "allocate-appointments";
