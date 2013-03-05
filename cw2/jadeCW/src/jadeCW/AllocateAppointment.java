@@ -8,8 +8,8 @@ import jade.lang.acl.MessageTemplate;
 @SuppressWarnings("serial")
 public class AllocateAppointment extends CyclicBehaviour{
 	
-	static String conversationID = "book-appointment";
-	AID[] appointments;
+	private static String conversationID = "book-appointment";
+	private AID[] appointments;
 	
 	public AllocateAppointment(AID[] appointments) {
 		this.appointments = appointments;
@@ -17,30 +17,35 @@ public class AllocateAppointment extends CyclicBehaviour{
 	
 	@Override
 	public void action() {
-        MessageTemplate mt = MessageTemplate.MatchConversationId(conversationID);
+        MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 
         ACLMessage received = myAgent.receive(mt);
-
-        if (received == null) return;
-
-        AID patient = received.getSender();
         
-        ACLMessage replyMessage;
-        
-        int i = getNextAvailableAppointment();
-        if(i != -1){
-        	appointments[i] = patient;
-            replyMessage = new ACLMessage(ACLMessage.CONFIRM);
-            replyMessage.addUserDefinedParameter("allocatedAppointment", String.valueOf(i+1));
+        if (received != null) {
+        	System.out.println("Hospital: message received and is not null");
+        	AID patient = received.getSender();
+        	
+            ACLMessage replyMessage = received.createReply();
+            
+            int i = getNextAvailableAppointment();
+            if(i != -1){
+            	appointments[i] = patient;
+                replyMessage.setPerformative(ACLMessage.CONFIRM);
+                replyMessage.addUserDefinedParameter("allocatedAppointment", String.valueOf(i+1));
+            }
+            else{
+            	replyMessage.setPerformative(ACLMessage.REFUSE);
+            }
+            
+            //replyMessage.addReceiver(patient);
+            //replyMessage.setConversationId(conversationID);
+
+            myAgent.send(replyMessage);
         }
-        else{
-        	replyMessage = new ACLMessage(ACLMessage.REFUSE);
+        else {
+        	System.out.println("Hospital - Allocate Appoinment blocked.");
+        	block();
         }
-        
-        replyMessage.addReceiver(patient);
-        replyMessage.setConversationId(conversationID);
-
-        myAgent.send(replyMessage);
 	}
 
 	private int getNextAvailableAppointment() {

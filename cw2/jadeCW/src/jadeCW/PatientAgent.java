@@ -12,6 +12,7 @@ import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -24,17 +25,19 @@ import java.util.List;
 @SuppressWarnings("serial")
 public class PatientAgent extends Agent {
 
-
     private AID appointmentAllocatorProvider;
     private int myAppointment = -1;
     private String inputString;
-
 
     protected void setup() {
 
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
-            inputString = (String) args[0];
+        	inputString = "";
+        	for (Object arg : args){  //THIS is a hack, need to make a change
+        		inputString += (String) arg + " ";
+        	}
+        	System.out.println("Input String: " + inputString);
         }
 
         parsePatientAppointmentPreferences(inputString);
@@ -65,7 +68,6 @@ public class PatientAgent extends Agent {
                             DFAgentDescription dfd = results[i];
                             AID provider = dfd.getName();
                             // The same agent may provide several services; we are only interested
-                            // in the weather-forcast one
                             Iterator it = dfd.getAllServices();
                             while (it.hasNext()) {
                                 ServiceDescription sd = (ServiceDescription) it.next();
@@ -78,7 +80,6 @@ public class PatientAgent extends Agent {
                             }
                         }
                     }
-                    System.out.println();
                 }
                 catch (FIPAException fe) {
                     fe.printStackTrace();
