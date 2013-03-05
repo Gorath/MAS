@@ -12,8 +12,9 @@ import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,12 +29,21 @@ public class PatientAgent extends Agent {
     private AID appointmentAllocatorProvider;
     private int myAppointment = -1;
     private String inputString;
+    List<ArrayList<Integer>> appointmentPreferences;
+    List<Integer> preferredAlreadyTried;
+    Map<Integer, AID> appointmentOwnedByPatient;
+
+    public PatientAgent(){
+        appointmentOwnedByPatient = new HashMap<Integer, AID>();
+    }
 
     protected void setup() {
 
+        inputString = "";
+
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
-        	inputString = "";
+
         	for (Object arg : args){  //THIS is a hack, need to make a change
         		inputString += (String) arg + " ";
         	}
@@ -46,6 +56,23 @@ public class PatientAgent extends Agent {
         addBehaviour(new RequestAppointment());
     }
 
+    public int getMorePreferredAppointment() {
+
+        for (int i = 0; i < appointmentPreferences.size(); i++) {
+
+            List<Integer> currentPreferenceLevel = appointmentPreferences.get(i);
+            if (currentPreferenceLevel.contains(myAppointment)) return -1;
+
+            for (int j = 0; j < currentPreferenceLevel.size(); j++) {
+                int preferenceNumber = currentPreferenceLevel.get(j);
+                if (!preferredAlreadyTried.contains(preferenceNumber)) {
+                    preferredAlreadyTried.add(preferenceNumber);
+                    return preferenceNumber;
+                }
+            }
+        }
+        return -1;
+    }
 
     private void subscribeToDF() {
         // Build the description used as template for the subscription
@@ -89,7 +116,7 @@ public class PatientAgent extends Agent {
     }
 
     public List<ArrayList<Integer>> parsePatientAppointmentPreferences(String line) {
-        List<ArrayList<Integer>> appointmentPreferences = new ArrayList<ArrayList<Integer>>();
+        appointmentPreferences = new ArrayList<ArrayList<Integer>>();
 
         String[] splitString = line.split("-");
 
@@ -127,10 +154,15 @@ public class PatientAgent extends Agent {
     public AID getAppointmentAllocator() {
         return appointmentAllocatorProvider;
     }
-    
+
+
     public void takeDown(){
     	String appointmentString = myAppointment == -1 ? String.valueOf(myAppointment) : "null";
     	System.out.println(this.getName() + ": Appointment " + appointmentString);
+    }
+
+    public void setAppointmentWithPatient(int appointment, AID patient){
+        appointmentOwnedByPatient.put(appointment, patient);
     }
 
 }

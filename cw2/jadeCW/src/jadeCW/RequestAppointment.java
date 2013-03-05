@@ -66,7 +66,7 @@ public class RequestAppointment extends Behaviour {
 
     @Override
     public boolean done() {
-        return ((PatientAgent)myAgent).hasAppointment() && step == 2;
+        return step == 2;
     }
 
 }
