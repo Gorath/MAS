@@ -21,14 +21,19 @@ import java.util.List;
  * Time: 10:39
  * To change this template use File | Settings | File Templates.
  */
+@SuppressWarnings("serial")
 public class PatientAgent extends Agent {
 
 
     private AID appointmentAllocatorProvider;
     private int myAppointment = -1;
+    private String inputString;
 
+    public PatientAgent(String inputString) {
+		this.inputString = inputString;  
+	}
+    
     protected void setup() {
-        String inputString = System.console().readLine().trim();
         parsePatientAppointmentPreferences(inputString);
         subscribeToDF();
 
@@ -111,12 +116,17 @@ public class PatientAgent extends Agent {
         return myAppointment != -1;
     }
 
-    public void setAppointment(int i) {
-        myAppointment = i;
+    public void setAppointment(int myAppointment) {
+        this.myAppointment = myAppointment;
     }
 
     public AID getAppointmentAllocator() {
         return appointmentAllocatorProvider;
+    }
+    
+    public void takeDown(){
+    	String appointmentString = myAppointment == -1 ? String.valueOf(myAppointment) : "null";
+    	System.out.println(this.getName() + ": Appointment " + appointmentString);
     }
 
 }

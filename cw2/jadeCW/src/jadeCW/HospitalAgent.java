@@ -1,5 +1,6 @@
 package jadeCW;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -15,12 +16,19 @@ import jade.domain.FIPAAgentManagement.Property;
  * Time: 10:22
  * To change this template use File | Settings | File Templates.
  */
+@SuppressWarnings("serial")
 public class HospitalAgent extends Agent {
 
+	private int numOfAppointments;
+	private AID[] appointments;
+	
+	public HospitalAgent(int numOfAppointments) {
+		super();
+		this.numOfAppointments = numOfAppointments;
+		appointments = new AID[numOfAppointments];
+	}
+	
     protected void setup() {
-
-        // Read number of appointments from std::in
-        int numOfAppointments = Integer.parseInt(System.console().readLine());
 
         // Reguster service allocate-appointments
         String serviceName = "allocate-appointments";
@@ -46,15 +54,26 @@ public class HospitalAgent extends Agent {
             fe.printStackTrace();
         }
 
-        addBehaviour(new AllocateAppointment());
+        addBehaviour(new AllocateAppointment(appointments));
         
-        // Make this agent terminate
-        doDelete();
     }
 
     public int requestedAppointment(Agent a, int appointmentNumber) {
         return -1;
     }
-
+    
+    public void takeDown(){
+    	for(int i = 0; i < numOfAppointments; i++){
+    		int appointmentID = i+1;
+    		AID patientAgent = appointments[i];
+    		String patient;
+    		if (patientAgent == null) {
+    			patient = "null";
+    		} else{
+    			patient = patientAgent.getName();
+    		}
+    		System.out.println("hopsital1: " + "Appointment " + appointmentID + ": " + patient);
+    	}
+    }
 
 }

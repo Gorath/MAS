@@ -32,9 +32,11 @@ public class RequestAppointment extends Behaviour {
                 MessageTemplate.MatchInReplyTo(request.getReplyWith()));
 
         ACLMessage response = myAgent.receive(mt);
-        int allocatedAppointment = Integer.parseInt(response.getUserDefinedParameter("allocatedAppointment"));
-        ((PatientAgent)myAgent).setAppointment(allocatedAppointment);
-
+        
+        if (response.getPerformative() == ACLMessage.CONFIRM){
+            int allocatedAppointment = Integer.parseInt(response.getUserDefinedParameter("allocatedAppointment"));
+            ((PatientAgent)myAgent).setAppointment(allocatedAppointment);
+        }
     }
 
     @Override
