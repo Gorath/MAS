@@ -1,0 +1,9 @@
+package jadeCW;
+
+public enum ActionStep {
+	GET_PREFERRED_APPOINTMENTS,
+	MAKE_REQUEST,
+	WAIT_FOR_REPLY,
+	WAIT,
+	FINISH;
+}

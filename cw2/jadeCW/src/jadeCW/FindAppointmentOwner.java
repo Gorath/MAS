@@ -1,5 +1,8 @@
 package jadeCW;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
@@ -16,25 +19,37 @@ import jade.lang.acl.UnreadableException;
 public class FindAppointmentOwner extends Behaviour {
 
     private static String conversationID = "find-appointment-owner";
-    private int step = 0;
+    private ActionStep step;
     private MessageTemplate mt;
-    private int preferredAppointment = -1;
+    private List<Integer> preferredAppointments;
+    private int mostPreferred;
 
-    //private List<Integer> alreadyTried = new ArrayList<Integer>;
+    public FindAppointmentOwner() {
+    	step = ActionStep.GET_PREFERRED_APPOINTMENTS;
+    	preferredAppointments = new ArrayList<Integer>();
+	}
 
     @Override
     public void action() {
-        switch(step) {
-            case 0:
-                AID allocator = ((PatientAgent)myAgent).getAppointmentAllocator();
-                if (!((PatientAgent)myAgent).hasAppointment()) return;
-                preferredAppointment = ((PatientAgent)myAgent).getMorePreferredAppointment();
+        PatientAgent patientAgent = (PatientAgent) myAgent;
+		switch(step) {
+			case GET_PREFERRED_APPOINTMENTS:
+				preferredAppointments = patientAgent.getMorePreferredAppointments();
+				step = ActionStep.MAKE_REQUEST;
+				break;
+            case MAKE_REQUEST:
+                AID allocator = patientAgent.getAppointmentAllocator();
+                if (!patientAgent.hasAppointment()) return;
 
                 // If we have no preferred appointments left to try then stop trying
-                if (preferredAppointment == -1 ) {
-                    step = 2;
+                if (preferredAppointments.size() == 0 ) {
+                    step = ActionStep.FINISH;
                     return;
                 }
+                
+                mostPreferred = preferredAppointments.remove(0);
+                patientAgent.setMostPreferredAppointment(mostPreferred);
+                
 
                 // If we have a preferred appointment send re-arrange request
                 // request to get the patient which has the appointment that we want
@@ -44,15 +59,15 @@ public class FindAppointmentOwner extends Behaviour {
                 request.setConversationId(conversationID);
                 request.setSender(myAgent.getAID());
                 request.setReplyWith("find-owner"+System.currentTimeMillis());
-                request.setContent(String.valueOf(preferredAppointment));
+                request.setContent(String.valueOf(mostPreferred));
 
                 myAgent.send(request);
 
                 mt = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
                                          MessageTemplate.MatchInReplyTo(request.getReplyWith()));
-                step = 1;
+                step = ActionStep.WAIT_FOR_REPLY;
                 break;
-            case 1:
+            case WAIT_FOR_REPLY:
                 ACLMessage response = myAgent.receive(mt);
                 if (response != null) {
                     System.out.println("Patient " + myAgent.getLocalName() + " - FindAppointmentOwner: Behaviour received response which is not null");
@@ -60,20 +75,20 @@ public class FindAppointmentOwner extends Behaviour {
                         try {
                             AID patientAID = (AID) response.getContentObject();
                             if(patientAID != null){
-                            	((PatientAgent)myAgent).setAppointmentWithCurrentPatientOwner(preferredAppointment, patientAID);
-                            	System.out.println("> Preferred appointment " + preferredAppointment + " is owned by " + patientAID.getLocalName());
+                            	patientAgent.setCurrentMostPreferredAppointmentOwner(patientAID);
+                            	System.out.println("> Preferred appointment " + mostPreferred + " is owned by " + patientAID.getLocalName());
                             }
                             else{
-                            	((PatientAgent)myAgent).addAvailableAppointment(preferredAppointment);
-                            	System.out.println("appointment " + preferredAppointment + " is free");
+                            	patientAgent.addAvailableAppointment(mostPreferred);
+                            	System.out.println("appointment " + mostPreferred + " is free");
                             }
                         } catch (UnreadableException e) {
                             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                         }
-                        step = 2;
+                        step = ActionStep.FINISH;
                     }
                     else{
-                        step = 0;
+                        step = ActionStep.MAKE_REQUEST;
                     }
                 }
                 else {
@@ -81,11 +96,13 @@ public class FindAppointmentOwner extends Behaviour {
                     block();
                 }
                 break;
+            default:
+            	break;
         }
     }
 
     @Override
     public boolean done() {
-        return step == 2;
+        return step == ActionStep.FINISH;
     }
 }

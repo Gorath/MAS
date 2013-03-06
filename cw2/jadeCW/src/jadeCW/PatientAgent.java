@@ -29,12 +29,14 @@ public class PatientAgent extends Agent {
     private AID appointmentAllocatorProvider;
     private int myAppointment = -1;
     private String inputString;
-    List<ArrayList<Integer>> appointmentPreferences;
-    Map<Integer, AID> currentAppointmentsOwnedByPatient;
-    List<Integer> availableAppointments;
+    private List<ArrayList<Integer>> appointmentPreferences;
+    private AID currentMostPreferredAppointmentOwner;
+    private List<Integer> availableAppointments;
+    private int currentMostPreferredAppointment = -1;
+    
+	private List<Integer> preferredAlreadyTried = new ArrayList<Integer>();
 
     public PatientAgent(){
-        currentAppointmentsOwnedByPatient = new HashMap<Integer, AID>();
         availableAppointments = new ArrayList<Integer>();
     }
 
@@ -56,16 +58,18 @@ public class PatientAgent extends Agent {
 
         addBehaviour(new RequestAppointment());
         addBehaviour(new FindAppointmentOwner());
+        addBehaviour(new ProposeSwap());
     }
 
     public int getMorePreferredAppointment() {
 
-    	List<Integer> preferredAlreadyTried = new ArrayList<Integer>();
-    	
         for (int i = 0; i < appointmentPreferences.size(); i++) {
 
             List<Integer> currentPreferenceLevel = appointmentPreferences.get(i);
-            if (currentPreferenceLevel.contains(myAppointment)) return -1;
+            if (currentPreferenceLevel.contains(myAppointment)) {
+            	// if we go to a preference level which contains our current appointment, then we return -1
+            	return -1;
+            }
 
             for (int j = 0; j < currentPreferenceLevel.size(); j++) {
                 int preferenceNumber = currentPreferenceLevel.get(j);
@@ -76,6 +80,21 @@ public class PatientAgent extends Agent {
             }
         }
         return -1;
+    }
+    
+    public List<Integer> getMorePreferredAppointments(){
+    	List<Integer> newList = new ArrayList<Integer>();
+    	
+    	for (int i = 0; i < appointmentPreferences.size(); i++){
+    		List<Integer> currentPreferenceLevelList = appointmentPreferences.get(i);
+            if (currentPreferenceLevelList.contains(myAppointment)) {
+            	// if we go to a preference level which contains our current appointment, then we return the current list
+            	return newList;
+            }
+            //essentially flatten the appointmentPreferences list to the newList
+            newList.addAll(currentPreferenceLevelList);
+    	}
+    	return newList;
     }
 
     private void subscribeToDF() {
@@ -155,22 +174,40 @@ public class PatientAgent extends Agent {
         this.myAppointment = myAppointment;
     }
 
+    public int getAppointment(){
+    	return myAppointment;
+    }
+    
     public AID getAppointmentAllocator() {
         return appointmentAllocatorProvider;
     }
-
-
+    
     public void takeDown(){
     	String appointmentString = myAppointment == -1 ? String.valueOf(myAppointment) : "null";
     	System.out.println(this.getLocalName() + ": Appointment " + appointmentString);
     }
 
-    public void setAppointmentWithCurrentPatientOwner(int appointment, AID patient){
-        currentAppointmentsOwnedByPatient.put(appointment, patient);
+    public void setCurrentMostPreferredAppointmentOwner(AID patient){
+    	currentMostPreferredAppointmentOwner = patient;
+    }
+    
+    public AID getCurrentMostPreferredAppointmentOwner(){
+    	return currentMostPreferredAppointmentOwner;
     }
     
     public void addAvailableAppointment(int appointment){
     	availableAppointments.add(appointment);
     }
-
+    
+    public boolean hasMostPreferredAppointmentOwner(){
+    	return currentMostPreferredAppointmentOwner != null;
+    }
+    
+    public void setMostPreferredAppointment(int appointment){
+    	currentMostPreferredAppointment = appointment;
+    }
+    
+    public int getMostPreferredAppointment(){
+    	return currentMostPreferredAppointment;
+    }
 }
