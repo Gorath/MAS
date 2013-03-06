@@ -20,42 +20,43 @@ public class FindAppointmentOwner extends Behaviour {
 
     private static String conversationID = "find-appointment-owner";
     private ActionStep step;
-    private MessageTemplate mt;
+    private MessageTemplate messageTemplate;
     private List<Integer> preferredAppointments;
-    private int mostPreferred;
+	private PatientState patientState;
 
-    public FindAppointmentOwner() {
-    	step = ActionStep.GET_PREFERRED_APPOINTMENTS;
+    public FindAppointmentOwner(PatientState patientState) {
+    	this.patientState = patientState;
+		step = ActionStep.INIT;
     	preferredAppointments = new ArrayList<Integer>();
-	}
+    }
 
-    @Override
+	@Override
     public void action() {
-        PatientAgent patientAgent = (PatientAgent) myAgent;
 		switch(step) {
-			case GET_PREFERRED_APPOINTMENTS:
-				if (!patientAgent.hasAppointment()) return;
-				preferredAppointments = patientAgent.getMorePreferredAppointments();
-				step = ActionStep.MAKE_REQUEST;
+			case INIT:
+				if (patientState.hasAppointment()) {
+					preferredAppointments = patientState.getMorePreferredAppointments();
+					step = ActionStep.MAKE_REQUEST;
+				}
 				break;
             case MAKE_REQUEST:
-                AID allocator = patientAgent.getAppointmentAllocator();
+                AID appointmentAllocator = patientState.getAppointmentAllocator();
 
                 // If we have no preferred appointments left to try then stop trying
                 if (preferredAppointments.size() == 0 ) {
                     step = ActionStep.FINISH;
-                    patientAgent.swapOccurred();
+                    patientState.swapOccurred();
                     return;
                 }
                 
-                mostPreferred = preferredAppointments.remove(0);
-                patientAgent.setMostPreferredAppointment(mostPreferred);
+                int mostPreferred = preferredAppointments.remove(0);
+                patientState.setMostPreferredAppointment(mostPreferred);
 
                 // If we have a preferred appointment send re-arrange request
                 // request to get the patient which has the appointment that we want
                 ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
 
-                request.addReceiver(allocator);
+                request.addReceiver(appointmentAllocator);
                 request.setConversationId(conversationID);
                 request.setSender(myAgent.getAID());
                 request.setReplyWith("find-owner"+System.currentTimeMillis());
@@ -63,19 +64,19 @@ public class FindAppointmentOwner extends Behaviour {
 
                 myAgent.send(request);
 
-                mt = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
+                messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
                                          MessageTemplate.MatchInReplyTo(request.getReplyWith()));
                 step = ActionStep.WAIT_FOR_REPLY;
                 break;
             case WAIT_FOR_REPLY:
-                ACLMessage response = myAgent.receive(mt);
+                ACLMessage response = myAgent.receive(messageTemplate);
                 if (response != null) {
                     System.out.println("Patient " + myAgent.getLocalName() + " - FindAppointmentOwner: Behaviour received response which is not null");
                     if (response.getPerformative() == ACLMessage.INFORM){
                         try {
                             AID patientAID = (AID) response.getContentObject();
-                            patientAgent.setCurrentMostPreferredAppointmentOwner(patientAID);
-                            System.out.println("> Preferred appointment " + mostPreferred + " is owned by " + patientAID.getLocalName());
+                            patientState.setCurrentMostPreferredAppointmentOwner(patientAID);
+                            System.out.println("> Preferred appointment " + patientState.getMostPreferredAppointment() + " is owned by " + patientAID.getLocalName());
                         } catch (Exception e) {
                             e.printStackTrace(); 
                         }
@@ -91,7 +92,12 @@ public class FindAppointmentOwner extends Behaviour {
                 }
                 break;
             case WAIT_FOR_PROPOSE_BEHAVIOUR:
-            	if (patientAgent.hasSwapOccurred()) {
+            	if (patientState.hasProposalBeenRejected()){
+            		patientState.setProposalRejection(false);
+            		step = ActionStep.MAKE_REQUEST;
+            		return;
+            	} 
+            	if (patientState.hasSwapOccurred()) {
             		step = ActionStep.FINISH;
             	}
             	break;

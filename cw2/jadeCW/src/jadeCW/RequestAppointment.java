@@ -14,20 +14,25 @@ import jade.lang.acl.MessageTemplate;
  */
 public class RequestAppointment extends Behaviour {
 
-    static String conversationID = "book-appointment";
-    private ActionStep step = ActionStep.MAKE_REQUEST;
-    private MessageTemplate mt;
+    private static String conversationID = "book-appointment";
+    private ActionStep step = ActionStep.INIT;
+    private MessageTemplate messageTemplate;
+	private PatientState patientState;
     
-    @Override
+    public RequestAppointment(PatientState patientState) {
+		this.patientState = patientState;	
+	}
+
+	@Override
     public void action() {
-    	PatientAgent patientAgent = (PatientAgent) myAgent;
 		switch (step){
+			case INIT:
+				if (patientState.getAppointmentAllocator() != null){
+					step = ActionStep.MAKE_REQUEST;
+				}	
+				break;		
 		    case MAKE_REQUEST:
-		        AID myAllocator = patientAgent.getAppointmentAllocator();
-		        if (myAllocator == null) return;
-		        if (patientAgent.hasAppointment()) return;
-		
-		        System.out.println(">>>>>>");
+		        AID myAllocator = patientState.getAppointmentAllocator();
 		        
 		        ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
 		        request.addReceiver(myAllocator);
@@ -37,18 +42,18 @@ public class RequestAppointment extends Behaviour {
 		        
 		        myAgent.send(request);
 		        
-		        mt = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
+		        messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
 		                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
-		        //MessageTemplate mt = MessageTemplate.MatchConversationId(conversationID);
+
 		        step = ActionStep.WAIT_FOR_REPLY;
 		        break;
 		    case WAIT_FOR_REPLY:
-		        ACLMessage response = myAgent.receive(mt);
+		        ACLMessage response = myAgent.receive(messageTemplate);
 		        if (response != null) {
 		        	System.out.println("Patient " + myAgent.getLocalName() + " - RequestAppointment: response received and not null");
 		            if (response.getPerformative() == ACLMessage.CONFIRM){
 		                int allocatedAppointment = Integer.parseInt(response.getUserDefinedParameter("allocatedAppointment"));
-		                patientAgent.setAppointment(allocatedAppointment);
+		                patientState.setAppointment(allocatedAppointment);
 		                step = ActionStep.FINISH;
 		            }
 		            else{
@@ -59,7 +64,7 @@ public class RequestAppointment extends Behaviour {
 		        	System.out.println("Patient " + myAgent.getLocalName() + " - RequestAppointment: blocked.");
 			        block();
 		        }
-		        System.out.println("Patient " + myAgent.getLocalName() + " appointment is: " + patientAgent.hasAppointment());
+		        System.out.println("Patient " + myAgent.getLocalName() + " appointment is: " + patientState.hasAppointment());
 		        break;
 			default:
 				break;
