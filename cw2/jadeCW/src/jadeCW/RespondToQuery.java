@@ -26,6 +26,10 @@ public class RespondToQuery extends CyclicBehaviour{
             
             AID appointmentOwner = ((HospitalAgent)myAgent).getAppointmentOwner(appointmentQuery);
             
+            if (appointmentOwner == null){
+            	appointmentOwner = myAgent.getAID();
+            }
+            
             ACLMessage replyMessage = received.createReply();
             replyMessage.setPerformative(ACLMessage.INFORM);
             try {

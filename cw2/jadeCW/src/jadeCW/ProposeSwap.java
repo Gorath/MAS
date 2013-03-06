@@ -14,6 +14,7 @@ public class ProposeSwap extends Behaviour{
 	@Override
 	public void action() {
 		PatientAgent patientAgent = (PatientAgent) myAgent;
+		if (patientAgent.hasSwapOccurred()) step = ActionStep.FINISH;
 		
 		switch (step){
 		    case MAKE_REQUEST:
@@ -41,6 +42,7 @@ public class ProposeSwap extends Behaviour{
 		        	System.out.println("Patient " + myAgent.getLocalName() + " - ProposeSwap: response received and not null");
 		            if (response.getPerformative() == ACLMessage.ACCEPT_PROPOSAL){
 		                patientAgent.setAppointment(patientAgent.getMostPreferredAppointment());
+		                patientAgent.swapOccurred();
 		                step = ActionStep.FINISH;
 		            }
 		            else if (response.getPerformative() == ACLMessage.REJECT_PROPOSAL){
@@ -59,8 +61,7 @@ public class ProposeSwap extends Behaviour{
 
 	@Override
 	public boolean done() {
-		// TODO Auto-generated method stub
-		return false;
+		return step == ActionStep.FINISH;
 	}
 
 }

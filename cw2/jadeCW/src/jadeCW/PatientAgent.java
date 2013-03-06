@@ -12,9 +12,7 @@ import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -31,13 +29,15 @@ public class PatientAgent extends Agent {
     private String inputString;
     private List<ArrayList<Integer>> appointmentPreferences;
     private AID currentMostPreferredAppointmentOwner;
-    private List<Integer> availableAppointments;
+    //private List<Integer> availableAppointments;
     private int currentMostPreferredAppointment = -1;
+    private boolean swapOccurred = false;
+    
     
 	private List<Integer> preferredAlreadyTried = new ArrayList<Integer>();
 
     public PatientAgent(){
-        availableAppointments = new ArrayList<Integer>();
+        //availableAppointments = new ArrayList<Integer>();
     }
 
     protected void setup() {
@@ -195,9 +195,9 @@ public class PatientAgent extends Agent {
     	return currentMostPreferredAppointmentOwner;
     }
     
-    public void addAvailableAppointment(int appointment){
-    	availableAppointments.add(appointment);
-    }
+    //public void addAvailableAppointment(int appointment){
+    //	availableAppointments.add(appointment);
+    //}
     
     public boolean hasMostPreferredAppointmentOwner(){
     	return currentMostPreferredAppointmentOwner != null;
@@ -209,5 +209,13 @@ public class PatientAgent extends Agent {
     
     public int getMostPreferredAppointment(){
     	return currentMostPreferredAppointment;
+    }
+    
+    public boolean hasSwapOccurred(){
+    	return swapOccurred;
+    }
+    
+    public void swapOccurred(){
+    	swapOccurred = true;
     }
 }

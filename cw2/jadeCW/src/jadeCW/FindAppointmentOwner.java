@@ -34,22 +34,22 @@ public class FindAppointmentOwner extends Behaviour {
         PatientAgent patientAgent = (PatientAgent) myAgent;
 		switch(step) {
 			case GET_PREFERRED_APPOINTMENTS:
+				if (!patientAgent.hasAppointment()) return;
 				preferredAppointments = patientAgent.getMorePreferredAppointments();
 				step = ActionStep.MAKE_REQUEST;
 				break;
             case MAKE_REQUEST:
                 AID allocator = patientAgent.getAppointmentAllocator();
-                if (!patientAgent.hasAppointment()) return;
 
                 // If we have no preferred appointments left to try then stop trying
                 if (preferredAppointments.size() == 0 ) {
                     step = ActionStep.FINISH;
+                    patientAgent.swapOccurred();
                     return;
                 }
                 
                 mostPreferred = preferredAppointments.remove(0);
                 patientAgent.setMostPreferredAppointment(mostPreferred);
-                
 
                 // If we have a preferred appointment send re-arrange request
                 // request to get the patient which has the appointment that we want
@@ -74,18 +74,12 @@ public class FindAppointmentOwner extends Behaviour {
                     if (response.getPerformative() == ACLMessage.INFORM){
                         try {
                             AID patientAID = (AID) response.getContentObject();
-                            if(patientAID != null){
-                            	patientAgent.setCurrentMostPreferredAppointmentOwner(patientAID);
-                            	System.out.println("> Preferred appointment " + mostPreferred + " is owned by " + patientAID.getLocalName());
-                            }
-                            else{
-                            	patientAgent.addAvailableAppointment(mostPreferred);
-                            	System.out.println("appointment " + mostPreferred + " is free");
-                            }
-                        } catch (UnreadableException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                            patientAgent.setCurrentMostPreferredAppointmentOwner(patientAID);
+                            System.out.println("> Preferred appointment " + mostPreferred + " is owned by " + patientAID.getLocalName());
+                        } catch (Exception e) {
+                            e.printStackTrace(); 
                         }
-                        step = ActionStep.FINISH;
+                        step = ActionStep.WAIT_FOR_PROPOSE_BEHAVIOUR;
                     }
                     else{
                         step = ActionStep.MAKE_REQUEST;
@@ -96,6 +90,11 @@ public class FindAppointmentOwner extends Behaviour {
                     block();
                 }
                 break;
+            case WAIT_FOR_PROPOSE_BEHAVIOUR:
+            	if (patientAgent.hasSwapOccurred()) {
+            		step = ActionStep.FINISH;
+            	}
+            	break;
             default:
             	break;
         }
