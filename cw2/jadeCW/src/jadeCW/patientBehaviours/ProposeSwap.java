@@ -47,10 +47,8 @@ public class ProposeSwap extends Behaviour{
 		    	int preferredAppointment = preferredAppointments.get(0);
 		    	AID preferredAppointmentOwner = patientState.getAppointmentOwner(preferredAppointment);
 		    	if (preferredAppointmentOwner != null){
-		    		patientState.setCurrentlyProposing(true);
+		    		patientState.setCurrentlyProposing(true); //set the currentlyProposing flag
 			        ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
-			        messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(proposeConversationID),
-			                MessageTemplate.MatchInReplyTo(message.getReplyWith()));
 			        message.addReceiver(preferredAppointmentOwner);
 			        message.setConversationId(proposeConversationID);
 			        message.setSender(myAgent.getAID());
@@ -58,6 +56,10 @@ public class ProposeSwap extends Behaviour{
 			        message.addUserDefinedParameter("currentAppointment", String.valueOf(patientState.getMyAppointment()));
 			        message.addUserDefinedParameter("preferredAppointment", String.valueOf(preferredAppointment));
 			        myAgent.send(message);	
+
+			        messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(proposeConversationID),
+			        		MessageTemplate.MatchInReplyTo(message.getReplyWith()));
+			        
 			        step = ActionStep.WAIT_FOR_REPLY;
 		    	}
 		        break;
@@ -71,10 +73,14 @@ public class ProposeSwap extends Behaviour{
 		            if (response.getPerformative() == ACLMessage.ACCEPT_PROPOSAL){
 	                	AID appointmentAllocator = patientState.getAppointmentAllocator();
 		            	AID swappedAppointmentOwner = response.getSender();
-		            	if (!appointmentAllocator.equals(swappedAppointmentOwner)){
+		            	if (!appointmentAllocator.equals(swappedAppointmentOwner)){ 
+		            		// if there is an appointment owner (i.e. not the hospital) then we can swap the appointments
+		            		//TODO: this way of generating a reply message is wrong. Change it.
 	                    	ACLMessage message = new ACLMessage(ACLMessage.INFORM);
 
 		                    try {
+		                    	// send an inform message to the appointment allocator (Hospital Agent) to tell it
+		                    	// that an appointment is to be swapped with another patient
 			                	message.addReceiver(appointmentAllocator);
 			                	message.setConversationId(informSwapConversationID);
 			                	message.setSender(myAgent.getAID());
@@ -86,13 +92,16 @@ public class ProposeSwap extends Behaviour{
 								e.printStackTrace();
 							}
 		            	}
+		            	// set the new appointment in the parent agent (our patient)
 		                patientState.setAppointment(newAppointment);
 		                step = ActionStep.FINISH;
 		            } else if (response.getPerformative() == ACLMessage.REJECT_PROPOSAL){
+		            	// if the proposal is rejected then go back to MAKE_REQUEST step?
 		            	step = ActionStep.MAKE_REQUEST;
 		            }
 		            patientState.removeKnownAppointmentOwner(newAppointment);
-		    		patientState.setCurrentlyProposing(false);
+		            //set the currently proposing flag as false when we have finished receiving a message
+		    		patientState.setCurrentlyProposing(false); 
 		        }
 		        else {
 		        	System.out.println("Patient " + myAgent.getLocalName() + " - ProposeSwap: blocked.");

@@ -39,10 +39,15 @@ public class RespondToProposal1 extends CyclicBehaviour {
 			if (patientState.isCurrentlyProposing()){
 				replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
 			} else if (theirPreferredAppointment != patientState.getMyAppointment()){
+				//if the proposed appointment is not the same as my appointment then reject
+				// this would occur if the proposed agent / proposee (this agent) has swapped its appointment with another patient agent
+				// in between the proposing agent's request to the hospital for the owner of this agent's previous appointment
+				// and the request from the proposing agent to this agent for an appointment swap
 				replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
 			} else {					
 				boolean isAtLeastAsPreferred = patientState.isAppointmentBetterThanCurrent(theirCurrentAppointment);
 				if (isAtLeastAsPreferred){
+					//if the proposed appointment is better/more preferred than our current appointment, then accept the proposal
 					AID appointmentAllocator = patientState.getAppointmentAllocator();
 					ACLMessage message = new ACLMessage(ACLMessage.INFORM);
 

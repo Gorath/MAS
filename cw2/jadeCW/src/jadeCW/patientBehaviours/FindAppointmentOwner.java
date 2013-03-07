@@ -39,6 +39,7 @@ public class FindAppointmentOwner extends Behaviour {
 		switch(step) {
 			case INIT:
 				if (patientState.hasAppointment()) {
+					System.out.println(">> Patient - FindAppointmentOwner: INITIALISATION");
 					preferredAppointments = patientState.getMorePreferredAppointments();
 					step = ActionStep.MAKE_REQUEST;
 				}
@@ -65,7 +66,9 @@ public class FindAppointmentOwner extends Behaviour {
                 request.setContent(String.valueOf(mostPreferred));
 
                 myAgent.send(request);
-
+                
+                System.out.println(">> Patient - FindAppointmentOwner: Message Sent, preferred appointment is: " + mostPreferred);
+                
                 messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
                                          MessageTemplate.MatchInReplyTo(request.getReplyWith()));
                 step = ActionStep.WAIT_FOR_REPLY;
@@ -75,12 +78,16 @@ public class FindAppointmentOwner extends Behaviour {
                 if (response != null) {
                     if (response.getPerformative() == ACLMessage.INFORM){
                         try {
+                        	// We have been told the appointment owner and so we set it as a 
+                        	// mapping from appointment (int) -> owner (AID) in patient state
                             AID patientAID = (AID) response.getContentObject();
                             patientState.addAppointmentOwner(mostPreferred, patientAID);
+                            System.out.println("<<<< Patient - FindAppointmentOwner: Message Received, owner of appointment " + mostPreferred + " is " + patientAID.getLocalName());
                         } catch (Exception e) {
                             e.printStackTrace(); 
                         }
                     }
+                    // go back to MAKE_REQUEST step to find the appointment owner for the next most preferred appointment
                     step = ActionStep.MAKE_REQUEST;
                 }
                 else {
