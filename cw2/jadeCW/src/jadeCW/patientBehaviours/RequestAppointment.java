@@ -16,7 +16,9 @@ import jadeCW.PatientState;
  */
 public class RequestAppointment extends Behaviour {
 
-    private final static String conversationID = "book-appointment";
+	private static final long serialVersionUID = 1L;
+	
+	private final static String conversationID = "book-appointment";
     private ActionStep step;
     private MessageTemplate messageTemplate;
 	private PatientState patientState;

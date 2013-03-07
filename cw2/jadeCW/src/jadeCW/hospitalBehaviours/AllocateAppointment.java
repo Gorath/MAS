@@ -6,10 +6,11 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jadeCW.HospitalState;
 
-@SuppressWarnings("serial")
 public class AllocateAppointment extends CyclicBehaviour{
 	
-	private static String conversationID = "book-appointment";
+	private static final long serialVersionUID = 1L;
+	
+	private final static String conversationID = "book-appointment";
 	private final HospitalState hospitalState;
 	
 	public AllocateAppointment(HospitalState hospitalState) {

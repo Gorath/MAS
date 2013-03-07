@@ -10,7 +10,9 @@ import jadeCW.HospitalState;
 
 public class RespondToQuery extends CyclicBehaviour{
 
-    private static String conversationID = "find-appointment-owner";
+	private static final long serialVersionUID = 1L;
+	
+	private static final String conversationID = "find-appointment-owner";
 	private final HospitalState hospitalState;
 
 	public RespondToQuery(HospitalState hospitalState) {
@@ -21,14 +23,13 @@ public class RespondToQuery extends CyclicBehaviour{
 	public void action() {
         MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
         										 MessageTemplate.MatchConversationId(conversationID));
-        //MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 
-        ACLMessage received = myAgent.receive(mt);
+        ACLMessage response = myAgent.receive(mt);
         
-        if (received != null) {
+        if (response != null) {
         	System.out.println("Hospital - RespondToQuery: message received and is not null");
-        	System.out.println("Content is: " + received.getContent());
-            int appointmentQuery = Integer.parseInt(received.getContent());
+        	System.out.println("Content is: " + response.getContent());
+            int appointmentQuery = Integer.parseInt(response.getContent());
             
             AID appointmentOwner = hospitalState.getAppointmentOwner(appointmentQuery);
             
@@ -36,7 +37,7 @@ public class RespondToQuery extends CyclicBehaviour{
             	appointmentOwner = myAgent.getAID();
             }
             
-            ACLMessage replyMessage = received.createReply();
+            ACLMessage replyMessage = response.createReply();
             replyMessage.setPerformative(ACLMessage.INFORM);
             try {
 				replyMessage.setContentObject(appointmentOwner);

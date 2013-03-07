@@ -1,15 +1,14 @@
 package jadeCW.patientBehaviours;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
 import jadeCW.ActionStep;
 import jadeCW.PatientState;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,11 +19,14 @@ import jadeCW.PatientState;
  */
 public class FindAppointmentOwner extends Behaviour {
 
-    private final static String conversationID = "find-appointment-owner";
+	private static final long serialVersionUID = 1L;
+	
+	private final static String conversationID = "find-appointment-owner";
     private ActionStep step;
     private MessageTemplate messageTemplate;
     private List<Integer> preferredAppointments;
 	private PatientState patientState;
+	private int mostPreferred;
 
     public FindAppointmentOwner(PatientState patientState) {
     	this.patientState = patientState;
@@ -47,12 +49,10 @@ public class FindAppointmentOwner extends Behaviour {
                 // If we have no preferred appointments left to try then stop trying
                 if (preferredAppointments.size() == 0 ) {
                     step = ActionStep.FINISH;
-                    patientState.swapOccurred();
                     return;
                 }
                 
-                int mostPreferred = preferredAppointments.remove(0);
-                patientState.setMostPreferredAppointment(mostPreferred);
+                mostPreferred = preferredAppointments.remove(0);
 
                 // If we have a preferred appointment send re-arrange request
                 // request to get the patient which has the appointment that we want
@@ -76,29 +76,18 @@ public class FindAppointmentOwner extends Behaviour {
                     if (response.getPerformative() == ACLMessage.INFORM){
                         try {
                             AID patientAID = (AID) response.getContentObject();
-                            patientState.setCurrentMostPreferredAppointmentOwner(patientAID);
-                            patientState.setCurrentlyProposing(true);
-                            step = ActionStep.WAIT_FOR_PROPOSE_BEHAVIOUR;
+                            patientState.addAppointmentOwner(mostPreferred, patientAID);
                         } catch (Exception e) {
                             e.printStackTrace(); 
                         }
                     }
-                    else{
-                        step = ActionStep.MAKE_REQUEST;
-                    }
+                    step = ActionStep.MAKE_REQUEST;
                 }
                 else {
                     System.out.println("Patient " + myAgent.getLocalName() + " - FindAppointmentOwner: blocked.");
                     block();
                 }
                 break;
-            case WAIT_FOR_PROPOSE_BEHAVIOUR:
-            	if (patientState.hasSwapOccurred()) {
-            		step = ActionStep.FINISH;
-            	} else if (!patientState.isCurrentlyProposing()){
-            		step = ActionStep.MAKE_REQUEST;
-            	}
-            	break;
             default:
             	break;
         }

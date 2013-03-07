@@ -10,8 +10,10 @@ import jadeCW.PatientState;
 
 public class RespondToProposal1 extends CyclicBehaviour {
 
+	private static final long serialVersionUID = 1L;
+
 	private PatientState patientState;
-	private static String conversationID = "propose-swap";
+	private static String proposeConversationID = "propose-swap";
 	private static String informSwapConversationID = "swapped-appointments";
 
 	public RespondToProposal1(PatientState patientState) {
@@ -19,14 +21,10 @@ public class RespondToProposal1 extends CyclicBehaviour {
 	}
 
 	@Override
-	public void action() {
-		if (patientState.isCurrentlyProposing()){
-			return;
-		}
-		
+	public void action() {		
 		MessageTemplate messageTemplate = MessageTemplate.and(
 				MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),
-				MessageTemplate.MatchConversationId(conversationID));
+				MessageTemplate.MatchConversationId(proposeConversationID));
 
 		ACLMessage response = myAgent.receive(messageTemplate);
 
@@ -34,32 +32,33 @@ public class RespondToProposal1 extends CyclicBehaviour {
 			System.out.println("Patient - RespondToProposal1: message received and is not null");
 
 			ACLMessage replyMessage = response.createReply();
+		
+			int theirCurrentAppointment = Integer.parseInt(response.getUserDefinedParameter("currentAppointment"));
+			int theirPreferredAppointment = Integer.parseInt(response.getUserDefinedParameter("preferredAppointment"));
 
-			int senderAppointment = Integer.parseInt(response.getUserDefinedParameter("senderAppointment"));
-			int receiverAppointment = Integer.parseInt(response.getUserDefinedParameter("receiverAppointment"));
-
-			if (receiverAppointment != patientState.getMyAppointment()){
+			if (patientState.isCurrentlyProposing()){
+				replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
+			} else if (theirPreferredAppointment != patientState.getMyAppointment()){
 				replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
 			} else {					
-				boolean isAtLeastAsPreferred = patientState.isAppointmentBetterThanCurrent(senderAppointment);
+				boolean isAtLeastAsPreferred = patientState.isAppointmentBetterThanCurrent(theirCurrentAppointment);
 				if (isAtLeastAsPreferred){
 					AID appointmentAllocator = patientState.getAppointmentAllocator();
-					ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+					ACLMessage message = new ACLMessage(ACLMessage.INFORM);
 
-					inform.addReceiver(appointmentAllocator);
-					inform.setConversationId(informSwapConversationID);
-					inform.setSender(myAgent.getAID());
-                	inform.addUserDefinedParameter("previousAppointment", String.valueOf(receiverAppointment));
-                	inform.addUserDefinedParameter("newAppointment", String.valueOf(senderAppointment));
 					try {
-						inform.setContentObject(response.getSender());
+						message.addReceiver(appointmentAllocator);
+						message.setConversationId(informSwapConversationID);
+						message.setSender(myAgent.getAID());
+	                	message.addUserDefinedParameter("currentAppointment", String.valueOf(theirPreferredAppointment));
+	                	message.addUserDefinedParameter("newAppointment", String.valueOf(theirCurrentAppointment));
+						message.setContentObject(response.getSender());
+						myAgent.send(message);		            						
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 
-					myAgent.send(inform);		            						
-
-					patientState.setAppointment(senderAppointment);
+					patientState.setAppointment(theirCurrentAppointment);
 					replyMessage.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 				} else {
 					replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);					

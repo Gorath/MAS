@@ -1,6 +1,7 @@
 package jadeCW.patientBehaviours;
 
 import java.io.IOException;
+import java.util.List;
 
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
@@ -11,14 +12,19 @@ import jadeCW.PatientState;
 
 public class ProposeSwap extends Behaviour{
 
-    private final static String proposeConversationID = "propose-swap";
+	private static final long serialVersionUID = 1L;
+	
+	private final static String proposeConversationID = "propose-swap";
     private final static String informSwapConversationID = "swapped-appointments";
-    private ActionStep step = ActionStep.MAKE_REQUEST;
+    private ActionStep step;
     private MessageTemplate messageTemplate;
 	private PatientState patientState;
+    private List<Integer> preferredAppointments;
+
     
 	public ProposeSwap(PatientState patientState) {
 		this.patientState = patientState;
+		step = ActionStep.INIT;
 	}
 
 	@Override
@@ -26,70 +32,73 @@ public class ProposeSwap extends Behaviour{
 		
 		switch (step){
 			case INIT:
-				if (patientState.hasSwapOccurred()) {
-					step = ActionStep.FINISH;
-				} else if (patientState.isCurrentlyProposing()){
+				if (patientState.hasAppointment()) {
+					preferredAppointments = patientState.getMorePreferredAppointments();
 					step = ActionStep.MAKE_REQUEST;
 				}
 				break;
-		    case MAKE_REQUEST:{
-		        AID currentMostPreferredAppointmentOwner = patientState.getCurrentMostPreferredAppointmentOwner();
-		        
-		        ACLMessage request = new ACLMessage(ACLMessage.PROPOSE);
-		        request.addReceiver(currentMostPreferredAppointmentOwner);
-		        request.setConversationId(proposeConversationID);
-		        request.setSender(myAgent.getAID());
-		        request.setReplyWith("propose-swap"+System.currentTimeMillis());		        		        
-		        request.addUserDefinedParameter("senderAppointment", String.valueOf(patientState.getMyAppointment()));
-		        request.addUserDefinedParameter("receiverAppointment", String.valueOf(patientState.getCurrentMostPreferredAppointment()));
-		        
-		        myAgent.send(request);
-		        
-		        messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(proposeConversationID),
-		                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
-		        
-		        step = ActionStep.WAIT_FOR_REPLY;
-		        
+		    case MAKE_REQUEST:
+		    	
+                if (preferredAppointments.size() == 0 ) {
+                    step = ActionStep.FINISH;
+                    return;
+                }
+                
+		    	int preferredAppointment = preferredAppointments.get(0);
+		    	AID preferredAppointmentOwner = patientState.getAppointmentOwner(preferredAppointment);
+		    	if (preferredAppointmentOwner != null){
+		    		patientState.setCurrentlyProposing(true);
+			        ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
+			        messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(proposeConversationID),
+			                MessageTemplate.MatchInReplyTo(message.getReplyWith()));
+			        message.addReceiver(preferredAppointmentOwner);
+			        message.setConversationId(proposeConversationID);
+			        message.setSender(myAgent.getAID());
+			        message.setReplyWith("propose-swap"+System.currentTimeMillis());		        		        
+			        message.addUserDefinedParameter("currentAppointment", String.valueOf(patientState.getMyAppointment()));
+			        message.addUserDefinedParameter("preferredAppointment", String.valueOf(preferredAppointment));
+			        myAgent.send(message);	
+			        step = ActionStep.WAIT_FOR_REPLY;
+		    	}
 		        break;
-		    }
-		    case WAIT_FOR_REPLY:{
+		    
+		    case WAIT_FOR_REPLY:
 		        ACLMessage response = myAgent.receive(messageTemplate);
 		        if (response != null) {
+                	int newAppointment = preferredAppointments.remove(0);
+
 		        	System.out.println("Patient " + myAgent.getLocalName() + " - ProposeSwap: response received and not null");
 		            if (response.getPerformative() == ACLMessage.ACCEPT_PROPOSAL){
 	                	AID appointmentAllocator = patientState.getAppointmentAllocator();
-		            	AID currentMostPreferredAppointmentOwner = patientState.getCurrentMostPreferredAppointmentOwner();
-		            	if (!appointmentAllocator.equals(currentMostPreferredAppointmentOwner)){		            	
-		            		ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+		            	AID swappedAppointmentOwner = response.getSender();
+		            	if (!appointmentAllocator.equals(swappedAppointmentOwner)){
+	                    	ACLMessage message = new ACLMessage(ACLMessage.INFORM);
 
-		                	inform.addReceiver(appointmentAllocator);
-		                	inform.setConversationId(informSwapConversationID);
-		                	inform.setSender(myAgent.getAID());
-		                	inform.addUserDefinedParameter("previousAppointment", String.valueOf(patientState.getMyAppointment()));
-		                	inform.addUserDefinedParameter("newAppointment", String.valueOf(patientState.getCurrentMostPreferredAppointment()));
 		                    try {
-								inform.setContentObject(currentMostPreferredAppointmentOwner);
+			                	message.addReceiver(appointmentAllocator);
+			                	message.setConversationId(informSwapConversationID);
+			                	message.setSender(myAgent.getAID());
+			                	message.addUserDefinedParameter("currentAppointment", String.valueOf(patientState.getMyAppointment()));
+			                	message.addUserDefinedParameter("newAppointment", String.valueOf(newAppointment));
+								message.setContentObject(swappedAppointmentOwner);
+			                	myAgent.send(message);		            	
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
-
-		                	myAgent.send(inform);		            	
 		            	}
-		                patientState.setAppointment(patientState.getCurrentMostPreferredAppointment());
-		                patientState.swapOccurred();
+		                patientState.setAppointment(newAppointment);
 		                step = ActionStep.FINISH;
+		            } else if (response.getPerformative() == ACLMessage.REJECT_PROPOSAL){
+		            	step = ActionStep.MAKE_REQUEST;
 		            }
-		            else if (response.getPerformative() == ACLMessage.REJECT_PROPOSAL){
-		            	step = ActionStep.INIT;
-		            }
-	            	patientState.setCurrentlyProposing(false);
+		            patientState.removeKnownAppointmentOwner(newAppointment);
+		    		patientState.setCurrentlyProposing(false);
 		        }
 		        else {
 		        	System.out.println("Patient " + myAgent.getLocalName() + " - ProposeSwap: blocked.");
 			        block();
 		        }
 		        break;
-		        }
 			default:
 				break;
 		}

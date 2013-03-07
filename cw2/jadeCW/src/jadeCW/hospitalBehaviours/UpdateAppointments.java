@@ -7,18 +7,19 @@ import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import jadeCW.HospitalState;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 public class UpdateAppointments extends CyclicBehaviour {
 
-	private static String conversationID = "swapped-appointments";
+	private static final long serialVersionUID = 1L;
+	
+	private static final String conversationID = "swapped-appointments";
 	private final HospitalState hospitalState;
-	private final HashMap<AID, AID> swaps;	
+	private final HashMap<AID, AID> swapsInformed;	
 	
 	public UpdateAppointments(HospitalState hospitalState) {
 		this.hospitalState = hospitalState;
-		this.swaps = new HashMap<AID, AID>();
+		this.swapsInformed = new HashMap<AID, AID>();
 	}
 
 	@Override
@@ -35,14 +36,14 @@ public class UpdateAppointments extends CyclicBehaviour {
 			try {			
 				AID agentA = response.getSender();
 				AID agentB = (AID) response.getContentObject();
-				if (swaps.get(agentB) != null && swaps.get(agentB).equals(agentA)){					
-					int previousAppointment = Integer.parseInt(response.getUserDefinedParameter("previousAppointment"));
+				if (swapsInformed.get(agentB) != null && swapsInformed.get(agentB).equals(agentA)){					
+					int currentAppointment = Integer.parseInt(response.getUserDefinedParameter("currentAppointment"));
 					int newAppointment = Integer.parseInt(response.getUserDefinedParameter("newAppointment"));					
 					hospitalState.setAppointment(newAppointment, agentA);
-					hospitalState.setAppointment(previousAppointment, agentB);
-					swaps.remove(agentB);
+					hospitalState.setAppointment(currentAppointment, agentB);
+					swapsInformed.remove(agentB);
 				} else {
-					swaps.put(agentA, agentB);
+					swapsInformed.put(agentA, agentB);
 				}
 			} catch (UnreadableException e) {
 				e.printStackTrace();
