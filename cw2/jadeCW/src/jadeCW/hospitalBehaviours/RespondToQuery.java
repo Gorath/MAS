@@ -1,4 +1,4 @@
-package jadeCW;
+package jadeCW.hospitalBehaviours;
 
 import java.io.IOException;
 
@@ -6,10 +6,16 @@ import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jadeCW.HospitalState;
 
 public class RespondToQuery extends CyclicBehaviour{
 
     private static String conversationID = "find-appointment-owner";
+	private final HospitalState hospitalState;
+
+	public RespondToQuery(HospitalState hospitalState) {
+		this.hospitalState = hospitalState;
+	}
 
 	@Override
 	public void action() {
@@ -24,7 +30,7 @@ public class RespondToQuery extends CyclicBehaviour{
         	System.out.println("Content is: " + received.getContent());
             int appointmentQuery = Integer.parseInt(received.getContent());
             
-            AID appointmentOwner = ((HospitalAgent)myAgent).getAppointmentOwner(appointmentQuery);
+            AID appointmentOwner = hospitalState.getAppointmentOwner(appointmentQuery);
             
             if (appointmentOwner == null){
             	appointmentOwner = myAgent.getAID();

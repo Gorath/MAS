@@ -1,4 +1,4 @@
-package jadeCW;
+package jadeCW.patientBehaviours;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,8 @@ import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
+import jadeCW.ActionStep;
+import jadeCW.PatientState;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,7 +20,7 @@ import jade.lang.acl.UnreadableException;
  */
 public class FindAppointmentOwner extends Behaviour {
 
-    private static String conversationID = "find-appointment-owner";
+    private final static String conversationID = "find-appointment-owner";
     private ActionStep step;
     private MessageTemplate messageTemplate;
     private List<Integer> preferredAppointments;
@@ -71,16 +73,15 @@ public class FindAppointmentOwner extends Behaviour {
             case WAIT_FOR_REPLY:
                 ACLMessage response = myAgent.receive(messageTemplate);
                 if (response != null) {
-                    System.out.println("Patient " + myAgent.getLocalName() + " - FindAppointmentOwner: Behaviour received response which is not null");
                     if (response.getPerformative() == ACLMessage.INFORM){
                         try {
                             AID patientAID = (AID) response.getContentObject();
                             patientState.setCurrentMostPreferredAppointmentOwner(patientAID);
-                            System.out.println("> Preferred appointment " + patientState.getMostPreferredAppointment() + " is owned by " + patientAID.getLocalName());
+                            patientState.setCurrentlyProposing(true);
+                            step = ActionStep.WAIT_FOR_PROPOSE_BEHAVIOUR;
                         } catch (Exception e) {
                             e.printStackTrace(); 
                         }
-                        step = ActionStep.WAIT_FOR_PROPOSE_BEHAVIOUR;
                     }
                     else{
                         step = ActionStep.MAKE_REQUEST;
@@ -92,13 +93,10 @@ public class FindAppointmentOwner extends Behaviour {
                 }
                 break;
             case WAIT_FOR_PROPOSE_BEHAVIOUR:
-            	if (patientState.hasProposalBeenRejected()){
-            		patientState.setProposalRejection(false);
-            		step = ActionStep.MAKE_REQUEST;
-            		return;
-            	} 
             	if (patientState.hasSwapOccurred()) {
             		step = ActionStep.FINISH;
+            	} else if (!patientState.isCurrentlyProposing()){
+            		step = ActionStep.MAKE_REQUEST;
             	}
             	break;
             default:

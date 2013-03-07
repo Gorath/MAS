@@ -1,18 +1,19 @@
-package jadeCW;
+package jadeCW.hospitalBehaviours;
 
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jadeCW.HospitalState;
 
 @SuppressWarnings("serial")
 public class AllocateAppointment extends CyclicBehaviour{
 	
 	private static String conversationID = "book-appointment";
-	private AID[] appointments;
+	private final HospitalState hospitalState;
 	
-	public AllocateAppointment(AID[] appointments) {
-		this.appointments = appointments;
+	public AllocateAppointment(HospitalState hospitalState) {
+		this.hospitalState = hospitalState;
 	}
 	
 	@Override
@@ -28,19 +29,15 @@ public class AllocateAppointment extends CyclicBehaviour{
         	
             ACLMessage replyMessage = received.createReply();
             
-            int i = getNextAvailableAppointment();
-            if(i != -1){
-            	appointments[i] = patient;
+            int appointment = hospitalState.setNextAvailableAppointment(patient);
+            if (appointment!=-1){
                 replyMessage.setPerformative(ACLMessage.CONFIRM);
-                replyMessage.addUserDefinedParameter("allocatedAppointment", String.valueOf(i+1));
+                replyMessage.addUserDefinedParameter("allocatedAppointment", String.valueOf(appointment+1));
             }
             else{
             	replyMessage.setPerformative(ACLMessage.REFUSE);
             }
             
-            //replyMessage.addReceiver(patient);
-            //replyMessage.setConversationId(conversationID);
-
             myAgent.send(replyMessage);
         }
         else {
@@ -48,14 +45,5 @@ public class AllocateAppointment extends CyclicBehaviour{
         	block();
         }
 	}
-
-	private int getNextAvailableAppointment() {
-        for (int i = 0; i < appointments.length; i++){
-        	if (appointments[i] == null){
-        		return i;
-        	}
-        }
-        return -1;
-	}
-
+	
 }

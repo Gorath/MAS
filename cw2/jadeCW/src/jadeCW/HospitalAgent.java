@@ -8,6 +8,10 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.Property;
+import jadeCW.hospitalBehaviours.AllocateAppointment;
+import jadeCW.hospitalBehaviours.RespondToProposal2;
+import jadeCW.hospitalBehaviours.RespondToQuery;
+import jadeCW.hospitalBehaviours.UpdateAppointments;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,18 +22,16 @@ import jade.domain.FIPAAgentManagement.Property;
  */
 @SuppressWarnings("serial")
 public class HospitalAgent extends Agent {
-
-	private int numOfAppointments;
-	private AID[] appointments;
 	
-    protected void setup() {
+    private HospitalState hospitalState;
+
+	protected void setup() {
 
         Object[] args = getArguments();
+        int numberOfAppointments = 0;
         if (args != null && args.length > 0) {
-            this.numOfAppointments = Integer.parseInt((String) args[0]);
+        	numberOfAppointments = Integer.parseInt((String) args[0]);
         }
-
-        appointments = new AID[numOfAppointments];
 
         // Reguster service allocate-appointments
         String serviceName = "allocate-appointments";
@@ -46,7 +48,7 @@ public class HospitalAgent extends Agent {
             sd.addOntologies("allocate-appointments-ontology");
             // Agents that want to use this service need to "speak" the FIPA-SL language
             sd.addLanguages(FIPANames.ContentLanguage.FIPA_SL);
-            sd.addProperties(new Property("numOfAppointments", String.valueOf(numOfAppointments)));
+            sd.addProperties(new Property("numOfAppointments", String.valueOf(numberOfAppointments)));
             dfd.addServices(sd);
 
             DFService.register(this, dfd);
@@ -54,18 +56,18 @@ public class HospitalAgent extends Agent {
         catch (FIPAException fe) {
             fe.printStackTrace();
         }
-
-        addBehaviour(new AllocateAppointment(appointments));
-        addBehaviour(new RespondToQuery());
         
-    }
+        hospitalState = new HospitalState(numberOfAppointments);
 
-    public AID getAppointmentOwner(int appointmentNumber) {
-        return appointments[appointmentNumber-1];
-    }
+        addBehaviour(new AllocateAppointment(hospitalState));
+        addBehaviour(new RespondToQuery(hospitalState));
+        addBehaviour(new RespondToProposal2(hospitalState));
+        addBehaviour(new UpdateAppointments(hospitalState));        
+    }    
     
     public void takeDown(){
-    	for(int i = 0; i < numOfAppointments; i++){
+    	AID[] appointments = hospitalState.getAppointments();
+    	for(int i = 0; i < appointments.length; i++){
     		int appointmentID = i+1;
     		AID patientAgent = appointments[i];
     		String patient;

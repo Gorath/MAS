@@ -10,6 +10,10 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
+import jadeCW.patientBehaviours.FindAppointmentOwner;
+import jadeCW.patientBehaviours.ProposeSwap;
+import jadeCW.patientBehaviours.RequestAppointment;
+import jadeCW.patientBehaviours.RespondToProposal1;
 
 import java.util.ArrayList;
 import java.util.List;

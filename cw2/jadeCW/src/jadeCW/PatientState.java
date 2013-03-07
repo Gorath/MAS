@@ -10,11 +10,10 @@ public class PatientState {
     private AID currentMostPreferredAppointmentOwner;
     private int currentMostPreferredAppointment = -1;
     private boolean swapOccurred = false;
-    private boolean proposalRejected = false;
     private int myAppointment = -1;
 	private List<List<Integer>> appointmentPreferences;
 	private AID appointmentAllocator;
-	private boolean startProposing = false;
+	private boolean currentlyProposing = false;
     
     public PatientState(List<List<Integer>> appointmentPreferences) {
 		this.appointmentPreferences = appointmentPreferences;
@@ -35,7 +34,7 @@ public class PatientState {
     	return newList;
     }
     
-    public boolean isAppointmentAtLeastAsPreferredAsMyAppointment(int appointment){
+    public boolean isAppointmentBetterThanCurrent(int appointment){
     	for (int i = 0; i < appointmentPreferences.size(); i++){
     		List<Integer> currentPreferenceLevelList = appointmentPreferences.get(i);
     		if (currentPreferenceLevelList.contains(appointment)){
@@ -76,7 +75,7 @@ public class PatientState {
     	currentMostPreferredAppointment = appointment;
     }
     
-    public int getMostPreferredAppointment(){
+    public int getCurrentMostPreferredAppointment(){
     	return currentMostPreferredAppointment;
     }
     
@@ -96,20 +95,12 @@ public class PatientState {
 		return appointmentAllocator;
 	}
 
-	public boolean hasProposalBeenRejected() {
-		return proposalRejected;
-	}
-
-	public void setProposalRejection(boolean proposalRejected) {		
-		this.proposalRejected = proposalRejected;  
-	}
-
-	public void setStartProposing(boolean startProposing){
-		this.startProposing = startProposing;
+	public void setCurrentlyProposing(boolean startProposing){
+		this.currentlyProposing = startProposing;
 	}
 	
-	public boolean canStartProposing() {
-		return startProposing;
+	public boolean isCurrentlyProposing() {
+		return currentlyProposing;
 	}
 	
 }

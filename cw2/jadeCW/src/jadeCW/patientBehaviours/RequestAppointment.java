@@ -1,9 +1,11 @@
-package jadeCW;
+package jadeCW.patientBehaviours;
 
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jadeCW.ActionStep;
+import jadeCW.PatientState;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,13 +16,14 @@ import jade.lang.acl.MessageTemplate;
  */
 public class RequestAppointment extends Behaviour {
 
-    private static String conversationID = "book-appointment";
-    private ActionStep step = ActionStep.INIT;
+    private final static String conversationID = "book-appointment";
+    private ActionStep step;
     private MessageTemplate messageTemplate;
 	private PatientState patientState;
     
     public RequestAppointment(PatientState patientState) {
-		this.patientState = patientState;	
+		this.patientState = patientState;
+		step = ActionStep.INIT;
 	}
 
 	@Override
@@ -35,15 +38,15 @@ public class RequestAppointment extends Behaviour {
 		        AID myAllocator = patientState.getAppointmentAllocator();
 		        
 		        ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+
+		        messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
+		                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
 		        request.addReceiver(myAllocator);
 		        request.setConversationId(conversationID);
 		        request.setSender(myAgent.getAID());
 		        request.setReplyWith("book"+System.currentTimeMillis());
 		        
-		        myAgent.send(request);
-		        
-		        messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
-		                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
+		        myAgent.send(request);		        
 
 		        step = ActionStep.WAIT_FOR_REPLY;
 		        break;
