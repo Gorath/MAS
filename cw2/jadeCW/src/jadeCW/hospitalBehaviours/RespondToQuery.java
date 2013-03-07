@@ -27,8 +27,6 @@ public class RespondToQuery extends CyclicBehaviour{
         ACLMessage response = myAgent.receive(mt);
         
         if (response != null) {
-        	System.out.println("Hospital - RespondToQuery: message received and is not null");
-        	System.out.println("Content is: " + response.getContent());
             int appointmentQuery = Integer.parseInt(response.getContent());
             
             AID appointmentOwner = hospitalState.getAppointmentOwner(appointmentQuery);
@@ -45,9 +43,12 @@ public class RespondToQuery extends CyclicBehaviour{
 				e.printStackTrace();
 			}
             myAgent.send(replyMessage);
+            
+            System.out.println("Hospital - owner for appointment " + appointmentQuery + " is " + appointmentOwner.getLocalName());
+            
         }
         else {
-        	System.out.println("Hospital - RespondToQuery: blocked.");
+        	//System.out.println("Hospital - RespondToQuery: blocked.");
         	block();
         }
 	}

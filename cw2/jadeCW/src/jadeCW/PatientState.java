@@ -9,14 +9,16 @@ import java.util.List;
 public class PatientState {
 
     private HashMap<Integer, AID> knownAppointmentOwners;
-    private int myAppointment = -1;
+    private int myAppointment;
 	private List<List<Integer>> appointmentPreferences;
 	private AID appointmentAllocator;
-	private boolean currentlyProposing = false;
+	private boolean currentlyProposing;
     
     public PatientState(List<List<Integer>> appointmentPreferences) {
 		this.appointmentPreferences = appointmentPreferences;
 		knownAppointmentOwners = new HashMap<Integer, AID>();		
+		myAppointment = -1;
+		currentlyProposing = false;
     }
     
     public List<Integer> getMorePreferredAppointments(){

@@ -25,7 +25,7 @@ public class UpdateAppointments extends CyclicBehaviour {
 	@Override
 	public void action() {
 		MessageTemplate messageTemplate = MessageTemplate.and(
-				MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),
+				MessageTemplate.MatchPerformative(ACLMessage.INFORM),
 				MessageTemplate.MatchConversationId(conversationID));
 
 		ACLMessage response = myAgent.receive(messageTemplate);
@@ -50,7 +50,7 @@ public class UpdateAppointments extends CyclicBehaviour {
 			}
 
 		} else {
-			System.out.println("Hospital - RespondToQuery: blocked.");
+			//System.out.println("Hospital - UpdateAppointments: blocked.");
 			block();
 		}
 	}

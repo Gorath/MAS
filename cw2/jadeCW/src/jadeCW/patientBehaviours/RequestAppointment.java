@@ -40,36 +40,35 @@ public class RequestAppointment extends Behaviour {
 		        AID myAllocator = patientState.getAppointmentAllocator();
 		        
 		        ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
-
-		        messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
-		                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
 		        request.addReceiver(myAllocator);
 		        request.setConversationId(conversationID);
 		        request.setSender(myAgent.getAID());
 		        request.setReplyWith("book"+System.currentTimeMillis());
-		        
 		        myAgent.send(request);		        
 
+		        System.out.println(">> " + myAgent.getLocalName() + " - requested an appointment");
+		        
+		        messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
+		                MessageTemplate.MatchInReplyTo(request.getReplyWith()));
 		        step = ActionStep.WAIT_FOR_REPLY;
 		        break;
 		    case WAIT_FOR_REPLY:
 		        ACLMessage response = myAgent.receive(messageTemplate);
 		        if (response != null) {
-		        	System.out.println("Patient " + myAgent.getLocalName() + " - RequestAppointment: response received and not null");
 		            if (response.getPerformative() == ACLMessage.CONFIRM){
 		                int allocatedAppointment = Integer.parseInt(response.getUserDefinedParameter("allocatedAppointment"));
+		                System.out.println(">> " + myAgent.getLocalName() + " has initial appointment " + allocatedAppointment);
 		                patientState.setAppointment(allocatedAppointment);
 		                step = ActionStep.FINISH;
 		            }
 		            else{
-		            	step = ActionStep.MAKE_REQUEST;
+		            	step = ActionStep.FINISH;
 		            }
 		        }
 		        else {
-		        	System.out.println("Patient " + myAgent.getLocalName() + " - RequestAppointment: blocked.");
+		        	//System.out.println("Patient " + myAgent.getLocalName() + " - RequestAppointment: blocked.");
 			        block();
 		        }
-		        System.out.println("Patient " + myAgent.getLocalName() + " appointment is: " + patientState.hasAppointment());
 		        break;
 			default:
 				break;

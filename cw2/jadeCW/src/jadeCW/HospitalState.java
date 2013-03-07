@@ -19,7 +19,7 @@ public class HospitalState {
 	}
 
 	public void setAppointment(int i, AID patient) {
-		appointments[i] = patient;
+		appointments[i-1] = patient;
 	}
 
 	public int getNextAvailableAppointment() {
@@ -32,7 +32,10 @@ public class HospitalState {
 	}
 
 	public boolean isAppointmentFree(int receiverAppointment) {
-		return appointments[receiverAppointment] == null;
+		if (receiverAppointment - 1 >= 0) {
+			return appointments[receiverAppointment-1] == null;
+		}
+		return false;
 	}
 
 	public int setNextAvailableAppointment(AID patient) {

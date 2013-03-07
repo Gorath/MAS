@@ -25,15 +25,15 @@ public class AllocateAppointment extends CyclicBehaviour{
         ACLMessage received = myAgent.receive(mt);
         
         if (received != null) {
-        	System.out.println("Hospital - AllocateAppointment: message received and is not null");
         	AID patient = received.getSender();
         	
             ACLMessage replyMessage = received.createReply();
             
             int appointment = hospitalState.setNextAvailableAppointment(patient);
-            if (appointment!=-1){
+            if (appointment != -1){
                 replyMessage.setPerformative(ACLMessage.CONFIRM);
                 replyMessage.addUserDefinedParameter("allocatedAppointment", String.valueOf(appointment+1));
+                System.out.println("Hospital " + (appointment+1) + " allocated for " + patient.getLocalName());
             }
             else{
             	replyMessage.setPerformative(ACLMessage.REFUSE);
@@ -42,7 +42,7 @@ public class AllocateAppointment extends CyclicBehaviour{
             myAgent.send(replyMessage);
         }
         else {
-        	System.out.println("Hospital - AllocateAppoinment blocked.");
+        	//System.out.println("Hospital - AllocateAppoinment blocked.");
         	block();
         }
 	}

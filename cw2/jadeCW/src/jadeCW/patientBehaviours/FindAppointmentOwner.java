@@ -38,8 +38,9 @@ public class FindAppointmentOwner extends Behaviour {
     public void action() {
 		switch(step) {
 			case INIT:
+				//System.out.println(">>>>>>>>>>>>>>bugaloo!");
 				if (patientState.hasAppointment()) {
-					System.out.println(">> Patient - FindAppointmentOwner: INITIALISATION");
+					//System.out.println(">> Patient - FindAppointmentOwner: INITIALISATION");
 					preferredAppointments = patientState.getMorePreferredAppointments();
 					step = ActionStep.MAKE_REQUEST;
 				}
@@ -67,7 +68,7 @@ public class FindAppointmentOwner extends Behaviour {
 
                 myAgent.send(request);
                 
-                System.out.println(">> Patient - FindAppointmentOwner: Message Sent, preferred appointment is: " + mostPreferred);
+                System.out.println(">> " + myAgent.getLocalName() + " has requested the owner for current most preferred appointment " + mostPreferred);
                 
                 messageTemplate = MessageTemplate.and(MessageTemplate.MatchConversationId(conversationID),
                                          MessageTemplate.MatchInReplyTo(request.getReplyWith()));
@@ -82,7 +83,7 @@ public class FindAppointmentOwner extends Behaviour {
                         	// mapping from appointment (int) -> owner (AID) in patient state
                             AID patientAID = (AID) response.getContentObject();
                             patientState.addAppointmentOwner(mostPreferred, patientAID);
-                            System.out.println("<<<< Patient - FindAppointmentOwner: Message Received, owner of appointment " + mostPreferred + " is " + patientAID.getLocalName());
+                            System.out.println("<<<< " + myAgent.getLocalName() + " received message, owner of appointment " + mostPreferred + " is " + patientAID.getLocalName());
                         } catch (Exception e) {
                             e.printStackTrace(); 
                         }
@@ -91,7 +92,7 @@ public class FindAppointmentOwner extends Behaviour {
                     step = ActionStep.MAKE_REQUEST;
                 }
                 else {
-                    System.out.println("Patient " + myAgent.getLocalName() + " - FindAppointmentOwner: blocked.");
+                    //System.out.println("Patient " + myAgent.getLocalName() + " - FindAppointmentOwner: blocked.");
                     block();
                 }
                 break;
